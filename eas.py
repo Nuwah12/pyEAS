@@ -2,9 +2,24 @@
 import json, sys
 from datetime import datetime, timezone
 import time
+from typing import List
 import requests
+import argparse
 
 API = "https://api.weather.gov/alerts/active"
+
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Get real time NWS EAS information."
+    )
+    
+    parser.add_argument(
+        "-c", "--config",
+        help="Path to the config file (default: config.json)",
+        default="config.json"
+    )
+
+    return parser.parse_args()
 
 def load_config(path="config.json"):
     with open(path, "r", encoding="utf-8") as f:
@@ -24,7 +39,7 @@ def fetch_active_for_point(point):
     r.raise_for_status()
     return r.json().get("features", [])
 
-def filter_events(features, wanted):
+def filter_events(features, wanted) -> List:
     if not wanted: return features
     wanted = {w.lower() for w in wanted}
     out = []
@@ -70,16 +85,18 @@ def show(features):
                 print(f"    More: {p.get('url')}\n")
                 
                 time.sleep(30)
+                
     except KeyboardInterrupt:
         print("\n======== Exit ========")
         sys.exit(0)
 
 def main():
-    cfg_path = sys.argv[1] if len(sys.argv) > 1 else "config.json"
-    cfg = load_config(cfg_path)
+    parser = get_parser()
+    cfg = load_config(parser.config)
     point = cfg.get("point")
     if not point:
-        print("Set 'point' in config.json as 'lat,lon'", file=sys.stderr); sys.exit(2)
+        print(f"[ERROR] Must provide a `point` value in {parser.config}"); sys.exit(1)
+        
     features = fetch_active_for_point(point)
     features = filter_events(features, cfg.get("events") or [])
     show(features)
