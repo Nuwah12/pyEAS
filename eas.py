@@ -6,6 +6,7 @@ from typing import List
 import requests
 import argparse
 
+### global API URL variable
 API = "https://api.weather.gov/alerts/active"
 
 def get_parser() -> argparse.ArgumentParser:
@@ -34,20 +35,22 @@ def iso(ts):
 
 def fetch_active_for_point(point):
     lat, lon = [x.strip() for x in point.split(",")]
+    ### URL
     url = f"{API}?point={lat},{lon}"
-    r = requests.get(url, headers={"User-Agent": "eas-simple/0.1"}, timeout=20)
-    r.raise_for_status()
-    return r.json().get("features", [])
+    ### GET request
+    try:
+        # NWS API requires that `User-Agent` be set in the HTTP header
+        r = requests.get(url, headers={"User-Agent": "eas-simple/0.1"}, timeout=20)
+        r.raise_for_status()
+        return r.json().get("features", [])
+    except requests.HTTPError as err:
+        print(f"HTTP error: {err}")
+    except TimeoutError as err:
+        print(f"Request timed out: {err}")
+    except requests.RequestException as err:
+        print(f"Request error: {err}")
 
-def filter_events(features, wanted) -> List:
-    if not wanted: return features
-    wanted = {w.lower() for w in wanted}
-    out = []
-    for f in features:
-        ev = (f.get("properties", {}).get("event") or "").lower()
-        if ev in wanted:
-            out.append(f)
-    return out
+    return None
 
 def show(features):
     if not features:
@@ -91,14 +94,13 @@ def show(features):
         sys.exit(0)
 
 def main():
-    parser = get_parser()
-    cfg = load_config(parser.config)
-    point = cfg.get("point")
+    parser = get_parser() # set up cli args
+    cfg = load_config(parser.config)# load config file
+    point = cfg.get("point") # get the coordinate from config
     if not point:
         print(f"[ERROR] Must provide a `point` value in {parser.config}"); sys.exit(1)
         
     features = fetch_active_for_point(point)
-    features = filter_events(features, cfg.get("events") or [])
     show(features)
 
 if __name__ == "__main__":
