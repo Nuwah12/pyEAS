@@ -1,0 +1,3 @@
+# Ignore all Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
