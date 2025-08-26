@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl
-from typing import List, Optional
+from typing import List, Literal, Optional
 from datetime import datetime
 
 class NWSAlert(BaseModel):
@@ -37,4 +37,20 @@ class IPAWSAlert(BaseModel):
     severity: Optional[str]
     certainty: Optional[str]
     sender_name: Optional[str]
+
+### The NWS API offers distinct parameters for each field
+class NWSAPIParams(BaseModel):
+    area: str
+    point: Optional[tuple[str, str]]
+    status: Optional[Literal["actual", "exercise", "system", "test", "draft"]]
+    message_type: Optional[Literal["alert", "update", "cancel"]]
+    urgency: Optional[Literal["immediate", "expected", "future", "past", "unknown"]]
+    severity: Optional[Literal["extreme", "severe", "moderate", "minor", "unknown"]]
+    certainty: Optional[Literal["observed", "likely", "possible", "unlikely", "unknown"]]
+
+### The FEMA API has all field values be passed via a filter variable
+class FEMAParams(BaseModel):
+    event: str
+    sent: datetime
+    sent_date_end: Optional[datetime]
 
