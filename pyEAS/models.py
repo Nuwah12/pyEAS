@@ -4,15 +4,15 @@ from datetime import datetime
 
 class NWSAlert(BaseModel):
     id: str
-    source: str                      # "FEMA" or "NWS"
+    source: str # "NWS"
     sent: datetime
     effective: Optional[datetime]
     expires: Optional[datetime]
-    status: Optional[str]            # e.g. "Actual"
-    msg_type: Optional[str]          # e.g. "Alert", "Update"
-    scope: Optional[str]             # e.g. "Public"
-    category: Optional[str]          # e.g. "Met"
-    event: Optional[str]             # e.g. "Tornado Warning"
+    status: Optional[str]      
+    msg_type: Optional[str]    
+    scope: Optional[str]     
+    category: Optional[str]        
+    event: Optional[str]            
     urgency: Optional[str]
     severity: Optional[str]
     certainty: Optional[str]
@@ -20,7 +20,21 @@ class NWSAlert(BaseModel):
     description: Optional[str]
     instruction: Optional[str]
     sender_name: Optional[str]
-    references: Optional[List[str]]
-    area: Optional[List["Area"]]     # nested model
-    links: Optional[List[HttpUrl]]   # NWS API often returns links
+
+class IPAWSAlert(BaseModel):
+    id: str
+    source: str # "FEMA"
+    identifier: str
+    sent: datetime
+    status: Optional[str]
+    msg_type: Optional[str]
+    scope: Optional[str]
+    event: Optional[str]
+    onset: Optional[datetime]
+    expires: Optional[datetime]
+    urgency: Optional[str]
+    headline: Optional[str]
+    severity: Optional[str]
+    certainty: Optional[str]
+    sender_name: Optional[str]
 
