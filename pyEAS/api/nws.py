@@ -35,6 +35,20 @@ def _filter_response(response: Dict, filter_params: Dict) -> Dict:
     return {k: v for k, v in response.items()
             if k not in filter_params or v in filter_params[k]}
 
+def _format_params(params: Dict) -> Dict:
+    """
+    Format keys, i.e. first capitalized, both capitalized, etc.
+    """
+    for p, val in params.items():
+        if p in ["urgency", "severity", "certainty"]:
+            params[p] = val.title()
+        elif p in ["status", "message_type", "region_type"]:
+            params[p] = val.lower()
+        elif p in ["zone", "area"]:
+            params[p] == val.upper()
+    
+    return params
+
 def get_active_alerts(
     area: str = "PA", # Default to PA
     status: str = "actual",
@@ -83,11 +97,20 @@ def get_active_alerts(
             continue
         
         filter_params[i] = kwargs[i]
-        
-    resp = _request(url_params).get("features")[0]
+
+    url_params = _format_params(url_params)
+
+    ### TODO:
+    #  Cleaner return on empty features (no alerts, return metadata and context of call)     
+    resp = _request(url_params).get("features",[])
+
+    if len(resp) == 0:
+        return "No active alerts for this area."
+    
+    resp = resp[0]
 
     return _filter_response(resp, filter_params)
 
 def get_active_alert_count() -> Dict:
     return _request(params = {}, 
-                    URL=f"{URL}/count")
+                    URL=f"{URL}/count") 
